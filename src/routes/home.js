@@ -11,66 +11,129 @@ router.get('/', (req, res) => {
   res.render('index');
 });
 
-module.exports = router;
-
-/*router.get('/delete', async (req, res) => {
-  const user = await userModel.findOneAndDelete({
-    email: "mostafizurrahman@gmail.com"
-  })
-  res.send(user);
-});
-
-router.get('/create', async (req, res) => {
-  const user = await userModel.create({
-    username: "mostafizurrahman",
-    email: "mostafizurrahman@gmail.com",
-    age: 15
-  })
-  res.send(user);
-});
-
-router.get('/all', async (req, res) => {
-  const user = await userModel.find()
-  res.send(user);
-});
-
-router.get('/post', async (req, res) => {
-  const post = await postModel.create({
-    postData: "Hello Backend Mama",
-    user: "67301967249b48c8609c417f",
-  })
-  
-  let user = await userModel.findOne({
-    _id: "67301967249b48c8609c417f"
-  })
-  user.posts.push(post._id);
-  await user.save();
-  res.send(post);
-});
-*/
-
-/*router.get('/', (req, res) => {
-  bcrypt.genSalt(10, function(err, salt) {
-    bcrypt.hash('Mostafizur123466', salt, function(err, hash) {
-      // Store hash in your password DB.
-      console.log(hash)
+router.post('/register', async (req, res) => {
+  const { name, username, email, age, password } = req.body;
+  let existingUser = await userModel.findOne({ $or: [{ username }, { email }] });
+  if (existingUser) return res.send('Username & Email already exist!');
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(password, salt, async (err, hash) => {
+      const user = await userModel.create({
+        name,
+        username,
+        email,
+        age,
+        password: hash
+      });
+      const findUser = await userModel.findOne({ email: user.email });
+      let token = jwt.sign({ email: email, userId: findUser._id }, "1315192016920mOsTaFiZuRcCODE");
+      res.cookie('token', token);
+      res.redirect('/login');
     });
   });
-  res.render('index');
-});
-*/
+})
 
-/* router.get('/', (req, res) => {
-  let token = jwt.sign({ email: 'mostafiz@mail.com' }, '1315192016926');
-  res.cookie('token', token);
-  console.log(req.cookies.token);
-  res.render('index');
+router.get('/logout', (req, res) => {
+  res.cookie("token", "");
+  res.redirect('/login');
 });
 
-router.get('/read', (req, res) => {
-  let data = jwt.verify(req.cookies.token, '1315192016926');
-  console.log(data);
-  res.send('Data received');
+router.get('/login', (req, res) => {
+  res.render('login');
 });
- */
 
+router.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  const user = await userModel.findOne({ email });
+  if (!user) return res.status(500).send("Something want wrong!");
+  bcrypt.compare(password, user.password, (err, result) => {
+    if (result === true) {
+      let token = jwt.sign({ email: email, userId: user._id }, "1315192016920mOsTaFiZuRcCODE");
+      res.cookie('token', token);
+      return res.status(200).redirect('/profile');
+    } else {
+      res.redirect('/login');
+    }
+  })
+});
+
+router.get('/profile', isLoggedIn, async (req, res) => {
+  const user = await userModel.findOne({ email: req.user.email }).populate('posts');
+
+  if (user) {
+    let date = new Date().toLocaleString(user.posts.date);
+    res.render('profile', { user, date });
+  } else {
+    res.redirect('/');
+  }
+});
+
+router.post('/post', isLoggedIn, async (req, res) => {
+  const user = await userModel.findOne({ email: req.user.email })
+  const { content } = req.body;
+
+  const post = await postModel.create({
+    content,
+    user: user._id
+  })
+
+  user.posts.push(post._id);
+  await user.save();
+  res.redirect('/profile');
+});
+
+router.get('/post/delete/:post_id', isLoggedIn, async (req, res) => {
+  const { post_id } = req.params;
+  const deletePost = await postModel.findOneAndDelete({ _id: post_id })
+  res.redirect('/profile');
+});
+
+router.get('/post/edit/:post_id', isLoggedIn, async (req, res) => {
+  const { post_id } = req.params;
+
+  const post = await postModel.findOne({ _id: post_id })
+  res.render('edit', { post });
+});
+
+router.get('/like/:id', isLoggedIn, async (req, res) => {
+  const post = await postModel.findOne({ _id: req.params.id }).populate('user');
+  if (post.likes.indexOf(req.user.userId) === -1) {
+    post.likes.push(req.user.userId);
+  } else {
+    post.likes.splice(post.likes.indexOf(req.user.userId), 1)
+  }
+
+  await post.save();
+  res.redirect('/profile');
+});
+
+router.post('/post/edit/updated', isLoggedIn, async (req, res) => {
+  const updatePost = await postModel.findOneAndUpdate({ content: req.body.updatedContent })
+  res.redirect('/profile');
+})
+
+
+router.get('/delete', async (req, res) => {
+  const data = jwt.verify(req.cookies.token, "1315192016920mOsTaFiZuRcCODE");
+  const user = await userModel.findOneAndDelete({ email: data.email })
+  res.cookie("token", "");
+  res.redirect('/');
+});
+
+
+router.get('/all', isLoggedIn, async (req, res) => {
+  const user = await userModel.find();
+  res.send(user);
+});
+
+function isLoggedIn(req, res, next) {
+  if (!req.cookies.token) return res.redirect('/login');
+  else {
+    const data = jwt.verify(req.cookies.token, "1315192016920mOsTaFiZuRcCODE");
+    req.user = data;
+  }
+  next();
+}
+
+
+
+module.exports = router;

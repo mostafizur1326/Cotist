@@ -1,4 +1,4 @@
-const DB_NAME = "firstpack";
+const DB_NAME = "cotist";
 const LIMIT = "20kb";
 
 module.exports = {

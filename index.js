@@ -11,7 +11,6 @@ const connectDB = require('./src/db/db.js');
 const { LIMIT } = require('./src/constants.js');
 
 const homeRouter = require('./src/routes/home.js');
-const aboutRouter = require('./src/routes/about.js');
 
 
 app.set('view engine', 'ejs');
@@ -26,7 +25,6 @@ connectDB()
   .then(() => {
     
     app.use(homeRouter);
-    app.use(aboutRouter);
     
     
     app.listen(PORT, () => {
