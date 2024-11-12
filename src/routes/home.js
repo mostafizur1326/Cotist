@@ -3,11 +3,34 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
+const upload = require('../utils/multerConfig.js');
 const userModel = require('../models/user.models.js');
 const postModel = require('../models/post.models.js');
 
 
-router.get('/', (req, res) => {
+router.get('/', isLoggedIn, async (req, res) => {
+  const user = await userModel.findOne({ email: req.user.email }).populate('posts');
+
+  if (user) {
+    let date = new Date().toLocaleString(user.posts.date);
+    res.render('profile', { user, date });
+  } else {
+    res.redirect('/');
+  }
+});
+
+router.get('/profile/upload', isLoggedIn, async (req, res) => {
+  res.render('profilePic');
+});
+
+router.post('/uploaded', isLoggedIn, upload.single('profilePic'), async (req, res) => {
+  const user = await userModel.findOne({ email: req.user.email });
+  user.profilePic = req.file.filename;
+  await  user.save();
+  res.redirect('/');
+});
+
+router.get('/register', (req, res) => {
   res.render('index');
 });
 
@@ -44,27 +67,16 @@ router.get('/login', (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body;
   const user = await userModel.findOne({ email });
-  if (!user) return res.status(500).send("Something want wrong!");
+  if (!user) return res.status(500).redirect("/register");
   bcrypt.compare(password, user.password, (err, result) => {
     if (result === true) {
       let token = jwt.sign({ email: email, userId: user._id }, "1315192016920mOsTaFiZuRcCODE");
       res.cookie('token', token);
-      return res.status(200).redirect('/profile');
+      return res.status(200).redirect('/');
     } else {
-      res.redirect('/login');
+      res.render('/login');
     }
   })
-});
-
-router.get('/profile', isLoggedIn, async (req, res) => {
-  const user = await userModel.findOne({ email: req.user.email }).populate('posts');
-
-  if (user) {
-    let date = new Date().toLocaleString(user.posts.date);
-    res.render('profile', { user, date });
-  } else {
-    res.redirect('/');
-  }
 });
 
 router.post('/post', isLoggedIn, async (req, res) => {
@@ -78,13 +90,13 @@ router.post('/post', isLoggedIn, async (req, res) => {
 
   user.posts.push(post._id);
   await user.save();
-  res.redirect('/profile');
+  res.redirect('/');
 });
 
 router.get('/post/delete/:post_id', isLoggedIn, async (req, res) => {
   const { post_id } = req.params;
   const deletePost = await postModel.findOneAndDelete({ _id: post_id })
-  res.redirect('/profile');
+  res.redirect('/');
 });
 
 router.get('/post/edit/:post_id', isLoggedIn, async (req, res) => {
@@ -103,12 +115,12 @@ router.get('/like/:id', isLoggedIn, async (req, res) => {
   }
 
   await post.save();
-  res.redirect('/profile');
+  res.redirect('/');
 });
 
 router.post('/post/edit/updated', isLoggedIn, async (req, res) => {
   const updatePost = await postModel.findOneAndUpdate({ content: req.body.updatedContent })
-  res.redirect('/profile');
+  res.redirect('/');
 })
 
 
@@ -116,7 +128,7 @@ router.get('/delete', async (req, res) => {
   const data = jwt.verify(req.cookies.token, "1315192016920mOsTaFiZuRcCODE");
   const user = await userModel.findOneAndDelete({ email: data.email })
   res.cookie("token", "");
-  res.redirect('/');
+  res.redirect('/register');
 });
 
 

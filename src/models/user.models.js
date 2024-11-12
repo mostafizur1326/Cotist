@@ -16,6 +16,10 @@ const userSchema = mongoose.Schema({
   age: {
     type: Number
   },
+  profilePic: {
+    type: String,
+    default: 'default.png'
+  },
   posts: [
     {
       type: mongoose.Schema.Types.ObjectId,

@@ -16,7 +16,13 @@
       <a class="bg-orange-600 px-4 py-[5px] rounded-md font-medium text-[12px]" href="/logout">Logout</a>
       <a class="bg-red-600 px-4 py-[5px] rounded-md font-medium text-[12px]" href="/delete">Delete Account</a>
     </div>
-    <h1 class="mt-6 text-3xl font-medium">Hello <span class="text-blue-400">@<%= user.username %></span> 👋🏻</h1>
+    <small class="inline-block mt-6"><a href="/profile/upload">Charge Profile.</a></small>
+    <h1 class="mt-2 text-3xl font-medium flex items-center gap-2"> <span class="inline-block w-12 overflow-hidden h-12 rounded-xl">
+      
+      <img class="w-full h-full object-cover" src="/images/uploads/<%= user.profilePic %>" alt="no">
+      
+      </span> Hello <span class="text-blue-400">@<%= user.username %></span> 👋🏻
+    </h1>
     <p class="mb-6 text-zinc-400">Create your post.</p>
 
     <form action="/post" method=POST>
