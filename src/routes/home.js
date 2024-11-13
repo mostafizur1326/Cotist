@@ -102,9 +102,14 @@ router.get('/post/delete/:post_id', isLoggedIn, async (req, res) => {
 router.get('/post/edit/:post_id', isLoggedIn, async (req, res) => {
   const { post_id } = req.params;
 
-  const post = await postModel.findOne({ _id: post_id })
+  const post = await postModel.findOne({ _id: post_id });
   res.render('edit', { post });
 });
+
+router.post('/post/edit/:id', isLoggedIn, async (req, res) => {
+  const updatePost = await postModel.findOneAndUpdate({ _id: req.params.id }, { content: req.body.updatedContent }, { new: true });
+  res.redirect('/');
+})
 
 router.get('/like/:id', isLoggedIn, async (req, res) => {
   const post = await postModel.findOne({ _id: req.params.id }).populate('user');
@@ -117,11 +122,6 @@ router.get('/like/:id', isLoggedIn, async (req, res) => {
   await post.save();
   res.redirect('/');
 });
-
-router.post('/post/edit/updated', isLoggedIn, async (req, res) => {
-  const updatePost = await postModel.findOneAndUpdate({ content: req.body.updatedContent })
-  res.redirect('/');
-})
 
 
 router.get('/delete', async (req, res) => {
