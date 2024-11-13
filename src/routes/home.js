@@ -26,7 +26,7 @@ router.get('/profile/upload', isLoggedIn, async (req, res) => {
 router.post('/uploaded', isLoggedIn, upload.single('profilePic'), async (req, res) => {
   const user = await userModel.findOne({ email: req.user.email });
   user.profilePic = req.file.filename;
-  await  user.save();
+  await user.save();
   res.redirect('/');
 });
 
@@ -137,6 +137,38 @@ router.get('/all', isLoggedIn, async (req, res) => {
   res.send(user);
 });
 
+router.get('/search', isLoggedIn, async (req, res) => {
+  res.render("find");
+});
+
+router.post('/search', isLoggedIn, async (req, res) => {
+  const user = await userModel.findOne({ username: req.body.search });
+  res.render("search-result", { user });
+});
+
+router.get('/search/result/profile/:username/:id', isLoggedIn, async (req, res) => {
+  const user = await userModel.findOne({ username: req.params.username }).populate('posts');
+  res.render('find-friend', { user });
+});
+
+router.get('/search/result/profile/:username/like/:id', isLoggedIn, async (req, res) => {
+  const username = req.params.username;
+  const id = req.params.id;
+
+  const currentUser = jwt.verify(req.cookies.token, "1315192016920mOsTaFiZuRcCODE");
+  const user = await userModel.findOne({ username: req.params.username }).populate('posts');
+  const post = await postModel.findOne({ _id: req.params.id }).populate('user');
+
+  if (post.likes.indexOf(currentUser.userId) === -1) {
+    post.likes.push(currentUser.userId);
+  } else {
+    post.likes.splice(post.likes.indexOf(currentUser.userId), 1)
+  }
+  await post.save();
+  res.redirect(`/search/result/profile/${username}/${id}`);
+});
+
+
 function isLoggedIn(req, res, next) {
   if (!req.cookies.token) return res.redirect('/login');
   else {
@@ -145,7 +177,6 @@ function isLoggedIn(req, res, next) {
   }
   next();
 }
-
 
 
 module.exports = router;

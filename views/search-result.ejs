@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.png">
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Cotist|Profile</title>
+</head>
+<body class="w-full h-full bg-zinc-900">
+
+  <div class="w-full h-screen text-white px-6 py-6 tracking-tighter">
+    <a class="text-blue-400 block mt-3 mb-6" href="/">back</a>
+    <h1 class="mb-6 text-2xl">Search your friends.</h1>
+
+    <form class="flex items-center" action="/search" method=POST>
+      <input class="w-full px-3 py-2 rounded bg-transparent outline-none border-2 border-zinc-700" type="text" name="search" placeholder="Username here..">
+      <button class="px-3 py-2 mt-4 text-md bg-blue-500 rounded mt-[-1px]">Search</button>
+    </form>
+    <% if(!user) { %>
+      <h3 class="text-zinc-600 mt-10 ml-2 text-sm">User not found</h3>
+    <% } else { %>
+    <div class="mt-8 flex flex-wrap  gap-3 items-center">
+      <h1 class="mt-3 text-sm text-zinc-400">Search Result.</h1>
+      
+      <a href="/search/result/profile/<%= user.username %>/<%= user._id %>" class="w-full min-h-20 inline-flex gap-3 items-center px-6 bg-zinc-700 rounded-md">
+        <div class="w-16 h-16 rounded-full overflow-hidden">
+          <img class="w-full h-full object-cover" src="/images/uploads/<%= user.profilePic %>" >
+        </div>
+        <div class="leading-relaxed">
+          <h3 class="text-sm font-semibold"><%= user.name %></h3>
+          <p class="text-zinc-500 mt-[-5px] text-[14px] whitespace-nowrap">@<%= user.username %></p>
+        </div>
+        <h4 class="ml-28 text-sm text-zinc-400 whitespace-nowrap">view profile</h4>
+      </a>
+    </div>
+    <% } %>
+  </div>
+
+  <script src="/javascripts/script.js"></script>
+</body>
+</html>

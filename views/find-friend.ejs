@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="shortcut icon" type="image/x-icon" href="/images/favicon.png">
+  <link rel="stylesheet" href="/stylesheets/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Cotist|Profile</title>
+</head>
+<body class="w-full h-full bg-zinc-900">
+
+  <div class="w-full h-screen text-white px-6 py-6 tracking-tighter">
+    <a class="text-blue-400 block mt-3 mb-6" href="/search">back</a>
+    <h1 class="mt-2 text-3xl font-medium flex items-center gap-2"> <span class="inline-block w-12 overflow-hidden h-12 rounded-xl">
+      
+      <img class="w-full h-full object-cover" src="/images/uploads/<%= user.profilePic %>" alt="no">
+      
+      </span><span class="text-blue-400">@<%= user.username %></span>
+    </h1>
+     <p class="text-gray-300 my-6 block">Her posts.</p>
+    
+    <div class="w-full h-1/2 flex flex-wrap gap-2">
+  <% user.posts.reverse().forEach((post) => { %>
+    <div class="w-[180px] h-[200px] bg-zinc-800 rounded border-[1px] border-zinc-600 px-3 py-2 relative">
+      <h4 class="text-blue-400 mb-2">@<%= user.username %></h4>
+      <p><%= post.content %></p>
+      <p class="text-[12px] text-gray-500 mt-3"><%= new Date().toLocaleString(post.date) %></p>
+      <div class="flex gap-8 absolute bottom-0 bg-zinc-800 text-[12px]">
+        <a href="/search/result/profile/<%= user.username %>/like/<%= post._id %>" class="text-blue-600">
+          <%= post.likes.indexOf(user._id) === -1 ? "Like" : "like" %> <%= post.likes.length %>
+        </a>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+  <script src="/javascripts/script.js"></script>
+</body>
+</html>
